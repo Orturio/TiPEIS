@@ -40,6 +40,10 @@ namespace LoanAgreement
             currentContainer.RegisterType<ChartOfAccountsLogic>(new HierarchicalLifetimeManager());
             currentContainer.RegisterType<IOperationStorage, OperationStorage>(new HierarchicalLifetimeManager());
             currentContainer.RegisterType<OperationLogic>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<IPostingJournalStorage, PostingJournalStorage>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<PostingJournalLogic>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<ITablePartStorage, TablePartStorage>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<TablePartLogic>(new HierarchicalLifetimeManager());
             return currentContainer;
         }
     }

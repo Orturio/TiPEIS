@@ -32,6 +32,7 @@ namespace MaterialAccountingDatabase
         {
             if (!optionsBuilder.IsConfigured)
             {
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
                 optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=postgres;Username=genius;password=jfrum4t5fgh");
             }
         }
@@ -55,7 +56,7 @@ namespace MaterialAccountingDatabase
                 entity.Property(e => e.Numberofcheck)
                     .IsRequired()
                     .HasColumnName("numberofcheck")
-                    .HasMaxLength(255);
+                    .HasMaxLength(100);
 
                 entity.Property(e => e.Subconto1)
                     .HasColumnName("subconto1")
@@ -125,31 +126,37 @@ namespace MaterialAccountingDatabase
                 entity.HasOne(d => d.ProvidercodeNavigation)
                     .WithMany(p => p.Operation)
                     .HasForeignKey(d => d.Providercode)
+                    .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("provider_fkey");
 
                 entity.HasOne(d => d.ResponsiblereceivercodeNavigation)
                     .WithMany(p => p.OperationResponsiblereceivercodeNavigation)
                     .HasForeignKey(d => d.Responsiblereceivercode)
+                    .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("responsiblereceiver_fkey");
 
                 entity.HasOne(d => d.ResponsiblesendercodeNavigation)
                     .WithMany(p => p.OperationResponsiblesendercodeNavigation)
                     .HasForeignKey(d => d.Responsiblesendercode)
+                    .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("responsiblesender_fkey");
 
                 entity.HasOne(d => d.SubdivisioncodeNavigation)
                     .WithMany(p => p.OperationSubdivisioncodeNavigation)
                     .HasForeignKey(d => d.Subdivisioncode)
+                    .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("subdivision_fkey");
 
                 entity.HasOne(d => d.WarehousereceivercodeNavigation)
                     .WithMany(p => p.OperationWarehousereceivercodeNavigation)
                     .HasForeignKey(d => d.Warehousereceivercode)
+                    .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("warehousereceiver_fkey");
 
                 entity.HasOne(d => d.WarehousesendercodeNavigation)
                     .WithMany(p => p.OperationWarehousesendercodeNavigation)
                     .HasForeignKey(d => d.Warehousesendercode)
+                    .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("warehousesender_fkey");
             });
 
@@ -170,7 +177,23 @@ namespace MaterialAccountingDatabase
 
                 entity.Property(e => e.Creditcheck).HasColumnName("creditcheck");
 
+                entity.Property(e => e.Date)
+                    .HasColumnName("date")
+                    .HasColumnType("date");
+
                 entity.Property(e => e.Debetcheck).HasColumnName("debetcheck");
+
+                entity.Property(e => e.Nameofmaterial)
+                    .HasColumnName("nameofmaterial")
+                    .HasMaxLength(255);
+
+                entity.Property(e => e.Numbercreditcheck)
+                    .HasColumnName("numbercreditcheck")
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.Numberdebetcheck)
+                    .HasColumnName("numberdebetcheck")
+                    .HasMaxLength(100);
 
                 entity.Property(e => e.Operationcode).HasColumnName("operationcode");
 
@@ -187,17 +210,14 @@ namespace MaterialAccountingDatabase
                     .HasMaxLength(150);
 
                 entity.Property(e => e.Subcontodebet1)
-                    .IsRequired()
                     .HasColumnName("subcontodebet1")
                     .HasMaxLength(150);
 
                 entity.Property(e => e.Subcontodebet2)
-                    .IsRequired()
                     .HasColumnName("subcontodebet2")
                     .HasMaxLength(150);
 
                 entity.Property(e => e.Subcontodebet3)
-                    .IsRequired()
                     .HasColumnName("subcontodebet3")
                     .HasMaxLength(150);
 
@@ -205,23 +225,26 @@ namespace MaterialAccountingDatabase
                     .HasColumnName("sum")
                     .HasColumnType("numeric(10,2)");
 
+                entity.Property(e => e.Tablepartcode).HasColumnName("tablepartcode");
+
+                entity.Property(e => e.Warehousereceivercode).HasColumnName("warehousereceivercode");
+
+                entity.Property(e => e.Warehousesendercode).HasColumnName("warehousesendercode");
+
                 entity.HasOne(d => d.CreditcheckNavigation)
                     .WithMany(p => p.PostingJournalCreditcheckNavigation)
                     .HasForeignKey(d => d.Creditcheck)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("creditcheck_fkey");
 
                 entity.HasOne(d => d.DebetcheckNavigation)
                     .WithMany(p => p.PostingJournalDebetcheckNavigation)
                     .HasForeignKey(d => d.Debetcheck)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("debetcheck_fkey");
 
-                entity.HasOne(d => d.OperationcodeNavigation)
+                entity.HasOne(d => d.TablepartcodeNavigation)
                     .WithMany(p => p.PostingJournal)
-                    .HasForeignKey(d => d.Operationcode)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("operation_fkey");
+                    .HasForeignKey(d => d.Tablepartcode)
+                    .HasConstraintName("tablepart_fkey");
             });
 
             modelBuilder.Entity<Provider>(entity =>
@@ -296,18 +319,18 @@ namespace MaterialAccountingDatabase
 
                 entity.Property(e => e.Operationcode).HasColumnName("operationcode");
 
-                entity.Property(e => e.Price).HasColumnName("price");
+                entity.Property(e => e.Price)
+                    .HasColumnName("price")
+                    .HasColumnType("numeric(10,2)");
 
                 entity.HasOne(d => d.MaterialcodeNavigation)
                     .WithMany(p => p.TablePart)
                     .HasForeignKey(d => d.Materialcode)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("material_fkey");
 
                 entity.HasOne(d => d.OperationcodeNavigation)
                     .WithMany(p => p.TablePart)
                     .HasForeignKey(d => d.Operationcode)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("operation_fkey");
             });
 

@@ -66,7 +66,7 @@ namespace MaterialAccountingDatabase.Implements
             }
             using (var context = new postgresContext())
             {
-                return context.Operation.Include(rec => rec.TablePart).ThenInclude(rec => rec.MaterialcodeNavigation).Where(rec => rec.Typeofoperation == model.Typeofoperation && rec.Warehousereceivercode == model.Warehousereceivercode).ToList().Select(rec => new OperationViewModel
+                return context.Operation.Include(rec => rec.TablePart).ThenInclude(rec => rec.MaterialcodeNavigation).Where(rec => (rec.Typeofoperation == model.Typeofoperation && rec.Warehousereceivercode == model.Warehousereceivercode) || (rec.Typeofoperation == model.Typeofoperation && rec.Warehousesendercode == model.Warehousesendercode && rec.Date <= model.Date)).ToList().Select(rec => new OperationViewModel
                 {
                     Code = rec.Code,
                     Typeofoperation = rec.Typeofoperation,
@@ -110,7 +110,7 @@ namespace MaterialAccountingDatabase.Implements
             }
         }
 
-        public void Insert(OperationBindingModel model)
+        public int Insert(OperationBindingModel model)
         {
             using (var context = new postgresContext())
             {
@@ -123,6 +123,9 @@ namespace MaterialAccountingDatabase.Implements
                         context.SaveChanges();
                         CreateModel(model, operation, context);
                         transaction.Commit();
+
+                        Operation element = context.Operation.FirstOrDefault(rec => operation.Code == rec.Code);
+                        return element.Code;
                     }
                     catch
                     {

@@ -41,9 +41,17 @@ namespace MaterialAccountingDatabase
             }
             using (var context = new postgresContext())
             {
-                var agelimit = context.ChartOfAccounts
-                .FirstOrDefault(rec => rec.Code == model.Code);
-                return agelimit != null ? CreateModel(agelimit) : null;
+                var chartOfAccounts = context.ChartOfAccounts.FirstOrDefault(rec => rec.Numberofcheck == model.NumberOfCheck);
+                return chartOfAccounts != null ?
+                new ChartOfAccountViewModel
+                {
+                    Code = chartOfAccounts.Code,
+                    NumberOfCheck = chartOfAccounts.Numberofcheck,
+                    NameOfCheck = chartOfAccounts.Nameofcheck,
+                    subconto1 = chartOfAccounts.Subconto1,
+                    subconto2 = chartOfAccounts.Subconto2,
+                    subconto3 = chartOfAccounts.Subconto3,
+            } : null;
             }
         }
 

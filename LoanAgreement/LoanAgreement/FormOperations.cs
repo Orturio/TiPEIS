@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Unity;
 using MaterialAccountingBusinessLogic.BindingModels;
+using MaterialAccountingBusinessLogic.ViewModels;
 using MaterialAccountingBusinessLogic.BusinessLogic;
 
 namespace LoanAgreement
@@ -19,7 +20,6 @@ namespace LoanAgreement
         public new IUnityContainer Container { get; set; }
 
         private readonly OperationLogic logic;
-
 
         public FormOperations(OperationLogic logic)
         {
@@ -88,16 +88,40 @@ MessageBoxIcon.Error);
 MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     int code = Convert.ToInt32(dataGridView.SelectedRows[0].Cells[0].Value);
-                    try
+                    OperationViewModel viewOperation = logic.Read(new OperationBindingModel { Code = code })?[0];
+
+                    List<OperationViewModel> viewOperationsMoving = new List<OperationViewModel>();
+                    List<OperationViewModel> viewOperationsRealise = new List<OperationViewModel>();
+
+                    if (viewOperation.Typeofoperation == "Поступление материала на склад")
                     {
-                        logic.Delete(new OperationBindingModel { Code = code });
+                        viewOperationsMoving = logic.Read(new OperationBindingModel { Typeofoperation = "Перемещение материалов с одного склада на другой", Warehousesendercode = viewOperation.Warehousereceivercode, Date = viewOperation.Date});
+                        viewOperationsRealise = logic.Read(new OperationBindingModel { Typeofoperation = "Отпуск материала со склада в производство", Warehousesendercode = viewOperation.Warehousereceivercode, Date = viewOperation.Date });
                     }
-                    catch (Exception ex)
+                   
+                    if (viewOperation.Typeofoperation == "Перемещение материалов с одного склада на другой")
                     {
-                        MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK,
-MessageBoxIcon.Error);
+                        viewOperationsRealise = logic.Read(new OperationBindingModel { Typeofoperation = "Отпуск материала со склада в производство", Warehousesendercode = viewOperation.Warehousereceivercode, Date = viewOperation.Date });
                     }
-                    LoadData();
+
+                    if ((viewOperationsMoving.Count == 0 && viewOperationsRealise.Count == 0))
+                    {
+                        try
+                        {
+                            logic.Delete(new OperationBindingModel { Code = code });
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        LoadData();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Удаление невозможно, так как есть движения по операции", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    
                 }
             }
         }
@@ -105,6 +129,19 @@ MessageBoxIcon.Error);
         private void buttonRef_Click(object sender, EventArgs e)
         {
             LoadData();
+        }
+
+        private void buttonPostingJournal_Click(object sender, EventArgs e)
+        {
+            if (dataGridView.SelectedRows.Count == 1)
+            {
+                var form = Container.Resolve<FormPostingJournal>();
+                form.Code = Convert.ToInt32(dataGridView.SelectedRows[0].Cells[0].Value);
+                if (form.ShowDialog() == DialogResult.OK)
+                {
+                    LoadData();
+                }
+            }
         }
     }
 }

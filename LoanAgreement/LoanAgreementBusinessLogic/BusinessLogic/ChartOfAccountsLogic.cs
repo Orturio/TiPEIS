@@ -19,7 +19,7 @@ namespace MaterialAccountingBusinessLogic
             {
                 return _chartOfAccountsStorage.GetFullList();
             }
-            if (model.Code.HasValue)
+            if (model.NumberOfCheck != null)
             {
                 return new List<ChartOfAccountViewModel> { _chartOfAccountsStorage.GetElement(model) };
             }

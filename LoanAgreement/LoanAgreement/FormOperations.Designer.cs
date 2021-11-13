@@ -34,6 +34,7 @@ namespace LoanAgreement
             this.buttonUpd = new System.Windows.Forms.Button();
             this.buttonAdd = new System.Windows.Forms.Button();
             this.dataGridView = new System.Windows.Forms.DataGridView();
+            this.buttonPostingJournal = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -86,11 +87,22 @@ namespace LoanAgreement
             this.dataGridView.Size = new System.Drawing.Size(527, 445);
             this.dataGridView.TabIndex = 5;
             // 
+            // buttonPostingJournal
+            // 
+            this.buttonPostingJournal.Location = new System.Drawing.Point(574, 325);
+            this.buttonPostingJournal.Name = "buttonPostingJournal";
+            this.buttonPostingJournal.Size = new System.Drawing.Size(145, 46);
+            this.buttonPostingJournal.TabIndex = 10;
+            this.buttonPostingJournal.Text = "Проводки по операции";
+            this.buttonPostingJournal.UseVisualStyleBackColor = true;
+            this.buttonPostingJournal.Click += new System.EventHandler(this.buttonPostingJournal_Click);
+            // 
             // FormOperations
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.buttonPostingJournal);
             this.Controls.Add(this.buttonRef);
             this.Controls.Add(this.buttonDel);
             this.Controls.Add(this.buttonUpd);
@@ -111,5 +123,6 @@ namespace LoanAgreement
         private System.Windows.Forms.Button buttonUpd;
         private System.Windows.Forms.Button buttonAdd;
         private System.Windows.Forms.DataGridView dataGridView;
+        private System.Windows.Forms.Button buttonPostingJournal;
     }
 }

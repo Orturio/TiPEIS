@@ -35,9 +35,10 @@ namespace MaterialAccountingBusinessLogic.BusinessLogic
             return _operationStorage.GetFilteredList(model);
         }
 
-        public void CreateOrUpdate(OperationBindingModel model)
+        public int CreateOrUpdate(OperationBindingModel model)
         {
             var element = _operationStorage.GetElement(new OperationBindingModel { Code = model.Code });
+            int code = 0;
 
             if (element != null && element.Code != model.Code)
             {
@@ -51,8 +52,9 @@ namespace MaterialAccountingBusinessLogic.BusinessLogic
 
             else
             {
-                _operationStorage.Insert(model);
+                code = _operationStorage.Insert(model);                
             }
+            return code;
         }
 
         public void Delete(OperationBindingModel model)

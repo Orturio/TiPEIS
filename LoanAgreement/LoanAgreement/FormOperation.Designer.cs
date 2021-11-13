@@ -42,6 +42,7 @@ namespace LoanAgreement
             this.idComponent = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Material = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Count = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Цена = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonSave = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
@@ -60,7 +61,12 @@ namespace LoanAgreement
             this.comboBoxMOLReceiver = new System.Windows.Forms.ComboBox();
             this.comboBoxSubdivision = new System.Windows.Forms.ComboBox();
             this.label10 = new System.Windows.Forms.Label();
-            this.Цена = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.comboBoxChecks = new System.Windows.Forms.ComboBox();
+            this.label11 = new System.Windows.Forms.Label();
+            this.label12 = new System.Windows.Forms.Label();
+            this.comboBoxCheckMaterial = new System.Windows.Forms.ComboBox();
+            this.label13 = new System.Windows.Forms.Label();
+            this.comboBoxProvider = new System.Windows.Forms.ComboBox();
             this.groupBoxComponents.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.SuspendLayout();
@@ -196,6 +202,12 @@ namespace LoanAgreement
             this.Count.Name = "Count";
             this.Count.ReadOnly = true;
             this.Count.Width = 150;
+            // 
+            // Цена
+            // 
+            this.Цена.HeaderText = "Price";
+            this.Цена.Name = "Цена";
+            this.Цена.ReadOnly = true;
             // 
             // buttonCancel
             // 
@@ -375,17 +387,87 @@ namespace LoanAgreement
             this.label10.Text = "Подразделение:";
             this.label10.Visible = false;
             // 
-            // Цена
+            // comboBoxChecks
             // 
-            this.Цена.HeaderText = "Price";
-            this.Цена.Name = "Цена";
-            this.Цена.ReadOnly = true;
+            this.comboBoxChecks.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxChecks.FormattingEnabled = true;
+            this.comboBoxChecks.Items.AddRange(new object[] {
+            "20",
+            "23",
+            "26",
+            "29"});
+            this.comboBoxChecks.Location = new System.Drawing.Point(792, 173);
+            this.comboBoxChecks.Name = "comboBoxChecks";
+            this.comboBoxChecks.Size = new System.Drawing.Size(134, 21);
+            this.comboBoxChecks.TabIndex = 26;
+            this.comboBoxChecks.Visible = false;
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(716, 176);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(70, 13);
+            this.label11.TabIndex = 27;
+            this.label11.Text = "Счет затрат:";
+            this.label11.Visible = false;
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(691, 235);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(91, 13);
+            this.label12.TabIndex = 28;
+            this.label12.Text = "Счет материала:";
+            this.label12.Visible = false;
+            // 
+            // comboBoxCheckMaterial
+            // 
+            this.comboBoxCheckMaterial.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxCheckMaterial.FormattingEnabled = true;
+            this.comboBoxCheckMaterial.Items.AddRange(new object[] {
+            "10.01",
+            "10.02",
+            "10.03",
+            "10.04"});
+            this.comboBoxCheckMaterial.Location = new System.Drawing.Point(792, 232);
+            this.comboBoxCheckMaterial.Name = "comboBoxCheckMaterial";
+            this.comboBoxCheckMaterial.Size = new System.Drawing.Size(134, 21);
+            this.comboBoxCheckMaterial.TabIndex = 29;
+            this.comboBoxCheckMaterial.Visible = false;
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(718, 176);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(68, 13);
+            this.label13.TabIndex = 30;
+            this.label13.Text = "Поставщик:";
+            this.label13.Visible = false;
+            // 
+            // comboBoxProvider
+            // 
+            this.comboBoxProvider.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxProvider.FormattingEnabled = true;
+            this.comboBoxProvider.Location = new System.Drawing.Point(792, 173);
+            this.comboBoxProvider.Name = "comboBoxProvider";
+            this.comboBoxProvider.Size = new System.Drawing.Size(134, 21);
+            this.comboBoxProvider.TabIndex = 31;
+            this.comboBoxProvider.Visible = false;
             // 
             // FormOperation
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(962, 497);
+            this.Controls.Add(this.comboBoxProvider);
+            this.Controls.Add(this.label13);
+            this.Controls.Add(this.comboBoxCheckMaterial);
+            this.Controls.Add(this.label12);
+            this.Controls.Add(this.label11);
+            this.Controls.Add(this.comboBoxChecks);
             this.Controls.Add(this.label10);
             this.Controls.Add(this.comboBoxSubdivision);
             this.Controls.Add(this.comboBoxMOLReceiver);
@@ -453,5 +535,11 @@ namespace LoanAgreement
         private System.Windows.Forms.ComboBox comboBoxSubdivision;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.DataGridViewTextBoxColumn Цена;
+        private System.Windows.Forms.ComboBox comboBoxChecks;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.ComboBox comboBoxCheckMaterial;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.ComboBox comboBoxProvider;
     }
 }

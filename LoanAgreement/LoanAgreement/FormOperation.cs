@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using MaterialAccountingBusinessLogic;
 using MaterialAccountingBusinessLogic.BindingModels;
 using MaterialAccountingBusinessLogic.BusinessLogic;
 using MaterialAccountingBusinessLogic.ViewModels;
@@ -16,10 +17,13 @@ namespace LoanAgreement
         public int Code { set { code = value; } }
 
         private readonly OperationLogic logic;
-
+        private readonly MaterialLogic logicMaterial;
+        private readonly PostingJournalLogic logicJournal;
         private readonly ResponsePersonLogic logicR;
-
         private readonly SubdivisonLogic logicS;
+        private readonly ChartOfAccountsLogic logicChart;
+        private readonly TablePartLogic logicTablePart;
+        private readonly ProviderLogic logicProvider;
 
         private decimal? sumMaterials = 0; 
 
@@ -29,12 +33,17 @@ namespace LoanAgreement
 
         private Dictionary<int, (string, int, decimal)> tablePart;
 
-        public FormOperation(OperationLogic logic, ResponsePersonLogic logicR, SubdivisonLogic logicS)
+        public FormOperation(OperationLogic logic, ResponsePersonLogic logicR, SubdivisonLogic logicS, PostingJournalLogic logicJournal, ChartOfAccountsLogic logicChart, TablePartLogic logicTablePart, MaterialLogic logicMaterial, ProviderLogic logicProvider)
         {
             InitializeComponent();
             this.logic = logic;
             this.logicR = logicR;
             this.logicS = logicS;
+            this.logicJournal = logicJournal;
+            this.logicChart = logicChart;
+            this.logicTablePart = logicTablePart;
+            this.logicMaterial = logicMaterial;
+            this.logicProvider = logicProvider;
 
             List<ResponsePersonViewModel> list = logicR.Read(null);
             if (list != null)
@@ -99,11 +108,22 @@ namespace LoanAgreement
                 comboBoxSubdivision.DataSource = listSubdivisions;
                 comboBoxSubdivision.SelectedItem = null;
             }
+
+            List<ProviderViewModel> listProviders = logicProvider.Read(null);
+            if (listProviders != null)
+            {
+                comboBoxProvider.DisplayMember = "Name";
+                comboBoxProvider.ValueMember = "Code";
+                comboBoxProvider.DataSource = listProviders;
+                comboBoxProvider.SelectedItem = null;
+            }
         }
 
 
         private void FormOperation_Load(object sender, EventArgs e)
         {
+            List<PostingJournalViewModel> viewCool = logicJournal.Read(new PostingJournalBindingModel { Tablepartcode = 121, Date = DateTime.Now });
+
             if (code.HasValue)
             {
                 try
@@ -116,9 +136,11 @@ namespace LoanAgreement
                         {
                             SubdivisionViewModel viewWarehouseReceive = logicS.Read(new SubdivisionBindingModel { Code = view.Warehousereceivercode })?[0];
                             ResponsePersonViewModel viewMOLReceiver = logicR.Read(new ResponsePersonBindingModel { Code = view.Responsiblereceivercode })?[0];
+                            ProviderViewModel viewProvider = logicProvider.Read(new ProviderBindingModels { Code = view.Providercode })?[0];
                             comboBox.Text = comboBox.Items[0].ToString();
                             comboBoxMOL.Text = viewMOLReceiver.Name;
                             comboBoxWarehouse.Text = viewWarehouseReceive.Name;
+                            comboBoxProvider.Text = viewProvider.Name;
                             dateTimePicker.Value = view.Date; 
                         }
                         else if (view.Typeofoperation == "Перемещение материалов с одного склада на другой")
@@ -136,11 +158,13 @@ namespace LoanAgreement
                         }
                         else if (view.Typeofoperation == "Отпуск материала со склада в производство")
                         {
-                            SubdivisionViewModel viewWarehouseReceive = logicS.Read(new SubdivisionBindingModel { Code = view.Warehousereceivercode })?[0];
+                            SubdivisionViewModel viewWarehouseReceive = logicS.Read(new SubdivisionBindingModel { Code = view.Warehousesendercode })?[0];
                             SubdivisionViewModel viewWarehouseSubdivision = logicS.Read(new SubdivisionBindingModel { Code = view.Subdivisioncode })?[0];
+                            ResponsePersonViewModel viewMOLReceiver = logicR.Read(new ResponsePersonBindingModel { Code = view.Responsiblereceivercode })?[0];
                             comboBox.Text = comboBox.Items[2].ToString();
                             comboBoxWarehouse.Text = viewWarehouseReceive.Name;
                             comboBoxSubdivision.Text = viewWarehouseSubdivision.Name;
+                            comboBoxMOLReceiver.Text = viewMOLReceiver.Name;
                             dateTimePicker.Value = view.Date;
                         }
 
@@ -307,13 +331,29 @@ MessageBoxIcon.Error);
                         MessageBox.Show("Не выбрали МОЛ-а", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
+                    if (string.IsNullOrEmpty(comboBoxCheckMaterial.Text))
+                    {
+                        MessageBox.Show("Выберите счет материала", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    if (string.IsNullOrEmpty(comboBoxProvider.Text)) 
+                    {
+                        MessageBox.Show("Выберите Поставщика", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    MaterialViewModel viewModelMaterial;
+
                     if (view == null)
                     {
-                        logic.CreateOrUpdate(new OperationBindingModel
+                        ChartOfAccountViewModel viewDebet = logicChart.Read(new ChartOfAccountsBindingModel { NumberOfCheck = comboBoxCheckMaterial.Text })?[0];
+                        ChartOfAccountViewModel viewCredit = logicChart.Read(new ChartOfAccountsBindingModel { NumberOfCheck = "60" })?[0];
+
+                        int code = logic.CreateOrUpdate(new OperationBindingModel
                         {
                             Typeofoperation = comboBox.Text,
                             Date = dateTimePicker.Value,
-                            Providercode = null,
+                            Providercode = Convert.ToInt32(comboBoxProvider.SelectedValue),
                             Warehousesendercode = null,
                             Warehousereceivercode = Convert.ToInt32(comboBoxWarehouse.SelectedValue),
                             Subdivisioncode = null,
@@ -322,15 +362,53 @@ MessageBoxIcon.Error);
                             Price = Convert.ToDecimal(textBoxPrice.Text),
                             TablePart = tablePart
                         });
+
+                        OperationViewModel viewOperation = logic.Read(new OperationBindingModel { Code = code })?[0];
+                        List<TablePartViewModel> viewTablePart = logicTablePart.Read(new TablePartBindingModel { Operationcode = Convert.ToInt32(code) });
+                        SubdivisionViewModel viewSubdivision = logicS.Read(new SubdivisionBindingModel { Code = viewOperation.Warehousereceivercode })?[0];
+                        ResponsePersonViewModel viewMOL = logicR.Read(new ResponsePersonBindingModel { Code = viewOperation.Responsiblereceivercode })?[0];
+                        ProviderViewModel viewProvider = logicProvider.Read(new ProviderBindingModels { Code = viewOperation.Providercode })?[0];
+                        
+                        foreach (var item in viewTablePart)
+                        {
+                            viewModelMaterial = new MaterialViewModel();
+                            viewModelMaterial = logicMaterial.Read(new MaterialBindingModel { Code = item.Materialcode })?[0];
+
+                            logicJournal.CreateOrUpdate(new PostingJournalBindingModel
+                            {
+                                Debetcheck = Convert.ToInt32(viewDebet.Code),
+                                Date = viewOperation.Date,
+                                Numberdebetcheck = viewDebet.NumberOfCheck,
+                                Subcontodebet1 = viewModelMaterial.Name,
+                                Subcontodebet2 = viewSubdivision.Name,
+                                Subcontodebet3 = viewMOL.Name,
+                                Creditcheck = Convert.ToInt32(viewCredit.Code),
+                                Numbercreditcheck = viewCredit.NumberOfCheck,
+                                Subcontocredit1 = viewProvider.Name,
+                                Subcontocredit2 = null,
+                                Subcontocredit3 = null,
+                                Nameofmaterial = viewModelMaterial.Name,
+                                Count = item.Count,
+                                Sum = Convert.ToDecimal(item.Count * item.Price),
+                                Tablepartcode = item.Code,
+                                Operationcode = item.Operationcode,
+                                Comment = "Операция поступления материалов",
+                                Warehousereceivercode = Convert.ToInt32(comboBoxWarehouse.SelectedValue)
+                            });
+                        }                        
                     }
+
                     else if (view != null)
-                    {
+                    {                       
+                        ChartOfAccountViewModel viewDebet = logicChart.Read(new ChartOfAccountsBindingModel { NumberOfCheck = comboBoxCheckMaterial.Text })?[0];
+                        ChartOfAccountViewModel viewCredit = logicChart.Read(new ChartOfAccountsBindingModel { NumberOfCheck = "60" })?[0];
+
                         logic.CreateOrUpdate(new OperationBindingModel
                         {
                             Code = view.Code,
                             Typeofoperation = comboBox.Text,
                             Date = dateTimePicker.Value,
-                            Providercode = null,
+                            Providercode = Convert.ToInt32(comboBoxProvider.SelectedValue),
                             Warehousesendercode = null,
                             Warehousereceivercode = Convert.ToInt32(comboBoxWarehouse.SelectedValue),
                             Subdivisioncode = null,
@@ -339,179 +417,131 @@ MessageBoxIcon.Error);
                             Price = Convert.ToDecimal(textBoxPrice.Text),
                             TablePart = tablePart
                         });
+
+                        OperationViewModel viewChangedOperation = logic.Read(new OperationBindingModel { Code = view.Code })?[0];
+                        List<TablePartViewModel> viewTablePart = logicTablePart.Read(new TablePartBindingModel { Operationcode = Convert.ToInt32(viewChangedOperation.Code) });
+                        SubdivisionViewModel viewSubdivision = logicS.Read(new SubdivisionBindingModel { Code = viewChangedOperation.Warehousereceivercode })?[0];
+                        ResponsePersonViewModel viewMOL = logicR.Read(new ResponsePersonBindingModel { Code = viewChangedOperation.Responsiblereceivercode })?[0];
+                        ProviderViewModel viewProvider = logicProvider.Read(new ProviderBindingModels { Code = viewChangedOperation.Providercode })?[0];
+
+                        foreach (var item in viewTablePart)
+                        {                         
+                            viewModelMaterial = new MaterialViewModel();
+                            viewModelMaterial = logicMaterial.Read(new MaterialBindingModel { Code = item.Materialcode })?[0];
+
+                            PostingJournalViewModel viewJournal = logicJournal.Read(new PostingJournalBindingModel { Tablepartcode = item.Code })?[0];
+
+                            if (viewJournal != null)
+                            {
+                                logicJournal.CreateOrUpdate(new PostingJournalBindingModel
+                                {
+                                    Code = viewJournal.Code,
+                                    Debetcheck = Convert.ToInt32(viewDebet.Code),
+                                    Date = viewChangedOperation.Date,
+                                    Numberdebetcheck = viewDebet.NumberOfCheck,
+                                    Subcontodebet1 = viewModelMaterial.Name,
+                                    Subcontodebet2 = viewSubdivision.Name,
+                                    Subcontodebet3 = viewMOL.Name,
+                                    Creditcheck = Convert.ToInt32(viewCredit.Code),
+                                    Numbercreditcheck = viewCredit.NumberOfCheck,
+                                    Subcontocredit1 = viewProvider.Name,
+                                    Subcontocredit2 = null,
+                                    Subcontocredit3 = null,
+                                    Nameofmaterial = viewModelMaterial.Name,
+                                    Count = item.Count,
+                                    Sum = Convert.ToDecimal(item.Count * item.Price),
+                                    Tablepartcode = item.Code,
+                                    Operationcode = item.Operationcode,
+                                    Comment = viewJournal.Comment,
+                                    Warehousereceivercode = Convert.ToInt32(comboBoxWarehouse.SelectedValue)
+                                });
+                            }
+                            else if (viewJournal == null)
+                            {
+                                logicJournal.CreateOrUpdate(new PostingJournalBindingModel
+                                {
+                                    Debetcheck = Convert.ToInt32(viewDebet.Code),
+                                    Date = viewChangedOperation.Date,
+                                    Numberdebetcheck = viewDebet.NumberOfCheck,
+                                    Subcontodebet1 = viewDebet.subconto1,
+                                    Subcontodebet2 = viewDebet.subconto2,
+                                    Subcontodebet3 = viewDebet.subconto3,
+                                    Creditcheck = Convert.ToInt32(viewCredit.Code),
+                                    Numbercreditcheck = viewCredit.NumberOfCheck,
+                                    Subcontocredit1 = viewCredit.subconto1,
+                                    Subcontocredit2 = viewCredit.subconto2,
+                                    Subcontocredit3 = viewCredit.subconto3,
+                                    Nameofmaterial = viewModelMaterial.Name,
+                                    Count = item.Count,
+                                    Sum = Convert.ToDecimal(item.Count * item.Price),
+                                    Tablepartcode = item.Code,
+                                    Operationcode = item.Operationcode,
+                                    Comment = "Операция поступления материалов",
+                                    Warehousereceivercode = Convert.ToInt32(comboBoxWarehouse.SelectedValue)
+                                });
+                            }
+                        }                  
                     }
                 }
 
-                if (comboBox.Text == "Перемещение материалов с одного склада на другой" || comboBox.Text == "Отпуск материала со склада в производство") 
+                if (comboBox.Text == "Перемещение материалов с одного склада на другой" || comboBox.Text == "Отпуск материала со склада в производство")
                 {
-                    // Проверка на кол-во материаллов
-                    List<OperationViewModel> viewSenderReceive = logic.Read(new OperationBindingModel { Typeofoperation = "Поступление материала на склад", Warehousereceivercode = Convert.ToInt32(comboBoxWarehouseSender.SelectedValue) });
-                    List<OperationViewModel> viewSenderMoving = new List<OperationViewModel>();
-                    bool noWarning = true;
-
-                    if  (comboBox.Text == "Перемещение материалов с одного склада на другой")
+                    ChartOfAccountViewModel viewDebet = logicChart.Read(new ChartOfAccountsBindingModel { NumberOfCheck = comboBoxCheckMaterial.Text })?[0];
+                    ChartOfAccountViewModel viewCredit = logicChart.Read(new ChartOfAccountsBindingModel { NumberOfCheck = comboBoxCheckMaterial.Text })?[0];
+                    List<PostingJournalViewModel> viewPostingJournalReceivers = new List<PostingJournalViewModel>();
+                    List<PostingJournalViewModel> viewPostingJournalSenders = new List<PostingJournalViewModel>();
+                    if (comboBox.Text == "Перемещение материалов с одного склада на другой")
                     {
-                        viewSenderMoving  = logic.Read(new OperationBindingModel { Typeofoperation = "Перемещение материалов с одного склада на другой", Warehousereceivercode = Convert.ToInt32(comboBoxWarehouseSender.SelectedValue) });
+                        viewPostingJournalSenders = logicJournal.Read(new PostingJournalBindingModel { Warehousesendercode = Convert.ToInt32(comboBoxWarehouseSender.SelectedValue), Date = dateTimePicker.Value });
+                        viewPostingJournalReceivers = logicJournal.Read(new PostingJournalBindingModel { Warehousereceivercode = Convert.ToInt32(comboBoxWarehouseSender.SelectedValue), Date = dateTimePicker.Value });
                     }
-                    else if (comboBox.Text == "Отпуск материала со склада в производство")
+                    if (comboBox.Text == "Отпуск материала со склада в производство")
                     {
-                        viewSenderMoving = logic.Read(new OperationBindingModel { Typeofoperation = "Перемещение материалов с одного склада на другой", Warehousereceivercode = Convert.ToInt32(comboBoxWarehouse.SelectedValue) });
+                        viewPostingJournalSenders = logicJournal.Read(new PostingJournalBindingModel { Warehousesendercode = Convert.ToInt32(comboBoxWarehouse.SelectedValue), Date = dateTimePicker.Value });
+                        viewPostingJournalReceivers = logicJournal.Read(new PostingJournalBindingModel { Warehousereceivercode = Convert.ToInt32(comboBoxWarehouse.SelectedValue), Date = dateTimePicker.Value });
                     }
 
-                    Dictionary<int, (string, int, decimal)> tablePartSender = new Dictionary<int, (string, int, decimal)>();
-                    foreach (var viewItem in viewSenderReceive)
+                    Dictionary<string, int> materials = new Dictionary<string, int>();
+                    foreach (var item in viewPostingJournalReceivers)
                     {
-                        foreach (var tablePartItem in viewItem.TablePart)
+                        if (materials.ContainsKey(item.Nameofmaterial))
                         {
-                            if (tablePartSender.ContainsKey(tablePartItem.Key))
-                            {
-                                tablePartSender[tablePartItem.Key] = (tablePartSender[tablePartItem.Key].Item1, tablePartSender[tablePartItem.Key].Item2 + tablePartItem.Value.Item2, tablePartSender[tablePartItem.Key].Item3);
-                            }
-                            else
-                            {
-                                tablePartSender.Add(tablePartItem.Key, (tablePartItem.Value));
-                            }
+                            materials[item.Nameofmaterial] = materials[item.Nameofmaterial] + item.Count;                          
+                        }                       
+                        else
+                        {
+                            materials.Add(item.Nameofmaterial, item.Count);
                         }
                     }
 
-                    //Если надо учитывать операцию Перемещение материалов с одного склада на другой, тогда нужно будет раскомментировать              
-                    foreach (var viewItem in viewSenderMoving)
+                    foreach (var item in viewPostingJournalSenders)
                     {
-                        foreach (var tablePartItem in viewItem.TablePart)
+                        if (view != null && item.Operationcode == view.Code)
                         {
-                            if (tablePartSender.ContainsKey(tablePartItem.Key))
-                            {
-                                tablePartSender[tablePartItem.Key] = (tablePartSender[tablePartItem.Key].Item1, tablePartSender[tablePartItem.Key].Item2 + tablePartItem.Value.Item2, tablePartSender[tablePartItem.Key].Item3);
-                            }
-                            else
-                            {
-                                tablePartSender.Add(tablePartItem.Key, (tablePartItem.Value));
-                            }
+                            continue;
+                        }
+                        if (materials.ContainsKey(item.Nameofmaterial))
+                        {
+                            materials[item.Nameofmaterial] = materials[item.Nameofmaterial] - item.Count;
+                        }
+                        else
+                        {
+                            materials.Add(item.Nameofmaterial, -item.Count);
                         }
                     }
 
-                    Dictionary<int, (string, int, decimal)> changedTablePart = new Dictionary<int, (string, int, decimal)>();
                     foreach (var item in tablePart)
                     {
-                        if (!changedTablePart.ContainsKey(item.Key))
-                        {
-                            changedTablePart.Add(item.Key, (item.Value));
-                        }
-                        if (tablePartSender.ContainsKey(item.Key) && tablePartSender[item.Key].Item2 >= item.Value.Item2)
+                        if (materials.ContainsKey(item.Value.Item1) && materials[item.Value.Item1] >= item.Value.Item2)
                         {
                             continue;
                         }
                         else
                         {
-                            noWarning = false;
-                            MessageBox.Show("Кол-во поступленных на выбранный склад материалов меньше кол-ва, которое хотим отправить на другой склад или такого материала вообще не поступало", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show("Кол-во поступленных на выбранный склад материалов меньше кол-ва, которое хотим отправить на другой склад или какого-то материала вообще не поступало", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             return;
                         }
                     }
-
-                    if(noWarning)
-                    {
-                        Dictionary<int, (string, int, decimal)> changedTablePartView;
-                        foreach (var viewItem in viewSenderReceive)
-                        {
-                            changedTablePartView = new Dictionary<int, (string, int, decimal)>();
-                            foreach (var item in viewItem.TablePart)
-                            {
-                                if (tablePart.ContainsKey(item.Key) && changedTablePart[item.Key].Item2 >= item.Value.Item2)
-                                {
-                                    changedTablePart[item.Key] = (item.Value.Item1, changedTablePart[item.Key].Item2 - item.Value.Item2, item.Value.Item3);
-                                    if (!changedTablePartView.ContainsKey(item.Key))
-                                    {
-                                        changedTablePartView.Add(item.Key, (item.Value.Item1, 0, item.Value.Item3));
-                                    }
-                                }
-                                else if (tablePart.ContainsKey(item.Key) && changedTablePart[item.Key].Item2 < item.Value.Item2)
-                                {
-                                    if (!changedTablePartView.ContainsKey(item.Key))
-                                    {
-                                        changedTablePartView.Add(item.Key, (item.Value.Item1, item.Value.Item2 - changedTablePart[item.Key].Item2, item.Value.Item3));
-                                    }
-                                    changedTablePart[item.Key] = (item.Value.Item1, 0, item.Value.Item3);
-                                }
-                                else if (!tablePart.ContainsKey(item.Key) && !changedTablePartView.ContainsKey(item.Key))
-                                {
-                                    changedTablePartView.Add(item.Key, (item.Value));
-                                }
-                            }
-
-                            decimal totalPrice = 0;
-                            foreach (var item in changedTablePartView)
-                            {
-                                totalPrice += item.Value.Item2 * item.Value.Item3;
-                            }
-
-                            logic.CreateOrUpdate(new OperationBindingModel
-                            {
-                                Code = viewItem.Code,
-                                Typeofoperation = viewItem.Typeofoperation,
-                                Date = viewItem.Date,
-                                Providercode = null,
-                                Warehousesendercode = null,
-                                Warehousereceivercode = viewItem.Warehousereceivercode,
-                                Subdivisioncode = null,
-                                Responsiblesendercode = null,
-                                Responsiblereceivercode = viewItem.Responsiblereceivercode,
-                                Price = totalPrice,
-                                TablePart = changedTablePartView
-                            });
-                        }
-
-                        //Если надо учитывать операцию Перемещение материалов с одного склада на другой, тогда нужно будет раскомментировать 
-                        foreach (var viewItem in viewSenderMoving)
-                        {
-                            changedTablePartView = new Dictionary<int, (string, int, decimal)>();
-                            foreach (var item in viewItem.TablePart)
-                            {
-                                if (tablePart.ContainsKey(item.Key) && changedTablePart[item.Key].Item2 >= item.Value.Item2)
-                                {
-                                    changedTablePart[item.Key] = (item.Value.Item1, changedTablePart[item.Key].Item2 - item.Value.Item2, item.Value.Item3);
-                                    if (!changedTablePartView.ContainsKey(item.Key))
-                                    {
-                                        changedTablePartView.Add(item.Key, (item.Value.Item1, 0, item.Value.Item3));
-                                    }
-                                }
-                                else if (tablePart.ContainsKey(item.Key) && changedTablePart[item.Key].Item2 < item.Value.Item2)
-                                {
-                                    if (!changedTablePartView.ContainsKey(item.Key))
-                                    {
-                                        changedTablePartView.Add(item.Key, (item.Value.Item1, item.Value.Item2 - changedTablePart[item.Key].Item2, item.Value.Item3));
-                                    }
-                                    changedTablePart[item.Key] = (item.Value.Item1, 0, item.Value.Item3);
-                                }
-                                else if (!tablePart.ContainsKey(item.Key) && !changedTablePartView.ContainsKey(item.Key))
-                                {
-                                    changedTablePartView.Add(item.Key, (item.Value));
-                                }
-                            }
-
-                            decimal totalPrice = 0;
-                            foreach (var item in changedTablePartView)
-                            {
-                                totalPrice += item.Value.Item2 * item.Value.Item3;
-                            }
-
-                            logic.CreateOrUpdate(new OperationBindingModel
-                            {
-                                Code = viewItem.Code,
-                                Typeofoperation = viewItem.Typeofoperation,
-                                Date = viewItem.Date,
-                                Providercode = null,
-                                Warehousereceivercode = viewItem.Warehousereceivercode,
-                                Warehousesendercode = viewItem.Warehousesendercode,
-                                Subdivisioncode = null,
-                                Responsiblereceivercode = viewItem.Responsiblereceivercode,
-                                Responsiblesendercode = viewItem.Responsiblesendercode,
-                                Price = totalPrice,
-                                TablePart = changedTablePartView
-                            });
-                        }
-                    }
-                    // проверка на кол-во материалов закончена
                 }
 
                 if (comboBox.Text == "Перемещение материалов с одного склада на другой")
@@ -550,11 +580,21 @@ MessageBoxIcon.Error);
                     {
                         MessageBox.Show("Нельзя выбрать одно и того же МОЛ-а отправителя и получателя", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
-                    }                                     
+                    }                              
+                    if (string.IsNullOrEmpty(comboBoxCheckMaterial.Text))
+                    {
+                        MessageBox.Show("Выберите счет материала", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }                   
+
+                    MaterialViewModel viewModelMaterial;
 
                     if (view == null)
-                    {                    
-                        logic.CreateOrUpdate(new OperationBindingModel
+                    {
+                        ChartOfAccountViewModel viewDebets = logicChart.Read(new ChartOfAccountsBindingModel { NumberOfCheck = comboBoxCheckMaterial.Text })?[0];
+                        ChartOfAccountViewModel viewCredits = logicChart.Read(new ChartOfAccountsBindingModel { NumberOfCheck = comboBoxCheckMaterial.Text })?[0];
+
+                        int code = logic.CreateOrUpdate(new OperationBindingModel
                         {
                             Typeofoperation = comboBox.Text,
                             Date = dateTimePicker.Value,
@@ -567,9 +607,48 @@ MessageBoxIcon.Error);
                             Price = Convert.ToDecimal(textBoxPrice.Text),
                             TablePart = tablePart
                         });
+
+                        OperationViewModel viewOperation = logic.Read(new OperationBindingModel { Code = code })?[0];
+                        List<TablePartViewModel> viewTablePart = logicTablePart.Read(new TablePartBindingModel { Operationcode = Convert.ToInt32(code) });
+                        SubdivisionViewModel viewSubdivision = logicS.Read(new SubdivisionBindingModel { Code = viewOperation.Warehousereceivercode })?[0];
+                        SubdivisionViewModel viewWarehouseSender = logicS.Read(new SubdivisionBindingModel { Code = viewOperation.Warehousesendercode })?[0];
+                        ResponsePersonViewModel viewMOLReceiver = logicR.Read(new ResponsePersonBindingModel { Code = viewOperation.Responsiblereceivercode })?[0];
+                        ResponsePersonViewModel viewMOLSender = logicR.Read(new ResponsePersonBindingModel { Code = viewOperation.Responsiblesendercode })?[0];
+
+                        foreach (var item in viewTablePart)
+                        {
+                            viewModelMaterial = new MaterialViewModel();
+                            viewModelMaterial = logicMaterial.Read(new MaterialBindingModel { Code = item.Materialcode })?[0];
+
+                            logicJournal.CreateOrUpdate(new PostingJournalBindingModel
+                            {
+                                Debetcheck = Convert.ToInt32(viewDebets.Code),
+                                Date = viewOperation.Date,
+                                Numberdebetcheck = viewDebets.NumberOfCheck,
+                                Subcontodebet1 = viewModelMaterial.Name,
+                                Subcontodebet2 = viewSubdivision.Name,
+                                Subcontodebet3 = viewMOLReceiver.Name,
+                                Creditcheck = Convert.ToInt32(viewCredits.Code),
+                                Numbercreditcheck = viewCredits.NumberOfCheck,
+                                Subcontocredit1 = viewModelMaterial.Name,
+                                Subcontocredit2 = viewWarehouseSender.Name,
+                                Subcontocredit3 = viewMOLSender.Name,
+                                Nameofmaterial = viewModelMaterial.Name,
+                                Count = item.Count,
+                                Sum = Convert.ToDecimal(item.Count * item.Price),
+                                Tablepartcode = item.Code,
+                                Operationcode = item.Operationcode,
+                                Comment = "Операция перемещения материалов",
+                                Warehousereceivercode = Convert.ToInt32(comboBoxWarehouseReceiver.SelectedValue),
+                                Warehousesendercode = Convert.ToInt32(comboBoxWarehouseSender.SelectedValue),
+                            });
+                        }
                     }
                     else if (view != null)
                     {
+                        ChartOfAccountViewModel viewDebets = logicChart.Read(new ChartOfAccountsBindingModel { NumberOfCheck = comboBoxCheckMaterial.Text })?[0];
+                        ChartOfAccountViewModel viewCredits = logicChart.Read(new ChartOfAccountsBindingModel { NumberOfCheck = "60" })?[0];
+
                         logic.CreateOrUpdate(new OperationBindingModel
                         {
                             Code = view.Code,
@@ -584,8 +663,75 @@ MessageBoxIcon.Error);
                             Price = Convert.ToDecimal(textBoxPrice.Text),
                             TablePart = tablePart
                         });
+
+                        OperationViewModel viewOperation = logic.Read(new OperationBindingModel { Code = view.Code })?[0];
+                        List<TablePartViewModel> viewTablePart = logicTablePart.Read(new TablePartBindingModel { Operationcode = Convert.ToInt32(code) });
+                        SubdivisionViewModel viewSubdivision = logicS.Read(new SubdivisionBindingModel { Code = viewOperation.Warehousereceivercode })?[0];
+                        SubdivisionViewModel viewWarehouseSender = logicS.Read(new SubdivisionBindingModel { Code = viewOperation.Warehousesendercode })?[0];
+                        ResponsePersonViewModel viewMOLReceiver = logicR.Read(new ResponsePersonBindingModel { Code = viewOperation.Responsiblereceivercode })?[0];
+                        ResponsePersonViewModel viewMOLSender = logicR.Read(new ResponsePersonBindingModel { Code = viewOperation.Responsiblesendercode })?[0];
+
+                        foreach (var item in viewTablePart)
+                        {
+                            viewModelMaterial = new MaterialViewModel();
+                            viewModelMaterial = logicMaterial.Read(new MaterialBindingModel { Code = item.Materialcode })?[0];
+
+                            PostingJournalViewModel viewJournal = logicJournal.Read(new PostingJournalBindingModel { Tablepartcode = item.Code })?[0];
+
+                            if (viewJournal != null)
+                            {
+                                logicJournal.CreateOrUpdate(new PostingJournalBindingModel
+                                {
+                                    Code = viewJournal.Code,
+                                    Debetcheck = Convert.ToInt32(viewDebets.Code),
+                                    Date = viewOperation.Date,
+                                    Numberdebetcheck = viewDebets.NumberOfCheck,
+                                    Subcontodebet1 = viewModelMaterial.Name,
+                                    Subcontodebet2 = viewSubdivision.Name,
+                                    Subcontodebet3 = viewMOLReceiver.Name,
+                                    Creditcheck = Convert.ToInt32(viewCredits.Code),
+                                    Numbercreditcheck = viewCredits.NumberOfCheck,
+                                    Subcontocredit1 = viewModelMaterial.Name,
+                                    Subcontocredit2 = viewWarehouseSender.Name,
+                                    Subcontocredit3 = viewMOLSender.Name,
+                                    Nameofmaterial = viewModelMaterial.Name,
+                                    Count = item.Count,
+                                    Sum = Convert.ToDecimal(item.Count * item.Price),
+                                    Tablepartcode = item.Code,
+                                    Operationcode = item.Operationcode,
+                                    Comment = viewJournal.Comment,
+                                    Warehousereceivercode = Convert.ToInt32(comboBoxWarehouseReceiver.SelectedValue),
+                                    Warehousesendercode = Convert.ToInt32(comboBoxWarehouseSender.SelectedValue),
+                                });
+                            }
+                            else if (viewJournal == null)
+                            {
+                                logicJournal.CreateOrUpdate(new PostingJournalBindingModel
+                                {
+                                    Debetcheck = Convert.ToInt32(viewDebets.Code),
+                                    Date = viewOperation.Date,
+                                    Numberdebetcheck = viewDebets.NumberOfCheck,
+                                    Subcontodebet1 = viewModelMaterial.Name,
+                                    Subcontodebet2 = viewSubdivision.Name,
+                                    Subcontodebet3 = viewMOLReceiver.Name,
+                                    Creditcheck = Convert.ToInt32(viewCredits.Code),
+                                    Numbercreditcheck = viewCredits.NumberOfCheck,
+                                    Subcontocredit1 = viewModelMaterial.Name,
+                                    Subcontocredit2 = viewWarehouseSender.Name,
+                                    Subcontocredit3 = viewMOLSender.Name,
+                                    Nameofmaterial = viewModelMaterial.Name,
+                                    Count = item.Count,
+                                    Sum = Convert.ToDecimal(item.Count * item.Price),
+                                    Tablepartcode = item.Code,
+                                    Operationcode = item.Operationcode,
+                                    Comment = "Операция перемещения материалов",
+                                    Warehousereceivercode = Convert.ToInt32(comboBoxWarehouseReceiver.SelectedValue),
+                                    Warehousesendercode = Convert.ToInt32(comboBoxWarehouseSender.SelectedValue)
+                                });
+                            }
+                        }
                     }
-                }
+                }        
 
                 if (comboBox.Text == "Отпуск материала со склада в производство")
                 {
@@ -604,39 +750,163 @@ MessageBoxIcon.Error);
                         MessageBox.Show("Не выбрали подразделение", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
+                    if (string.IsNullOrEmpty(comboBoxCheckMaterial.Text))
+                    {
+                        MessageBox.Show("Выберите счет материала", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    if (string.IsNullOrEmpty(comboBoxChecks.Text))
+                    {
+                        MessageBox.Show("Выберите счет затрат", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    if (string.IsNullOrEmpty(comboBoxMOLReceiver.Text))
+                    {
+                        MessageBox.Show("Выберите счет затрат", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    MaterialViewModel viewModelMaterial;
 
                     if (view == null)
                     {
-                        logic.CreateOrUpdate(new OperationBindingModel
+                        ChartOfAccountViewModel viewDebet = logicChart.Read(new ChartOfAccountsBindingModel { NumberOfCheck = comboBoxChecks.Text })?[0];
+                        ChartOfAccountViewModel viewCredit = logicChart.Read(new ChartOfAccountsBindingModel { NumberOfCheck = comboBoxCheckMaterial.Text })?[0];
+
+                        int code = logic.CreateOrUpdate(new OperationBindingModel
                         {
                             Typeofoperation = comboBox.Text,
                             Date = dateTimePicker.Value,
                             Providercode = null,
-                            Warehousereceivercode = Convert.ToInt32(comboBoxWarehouse.SelectedValue),
-                            Warehousesendercode = null,
+                            Warehousereceivercode = null,
+                            Warehousesendercode = Convert.ToInt32(comboBoxWarehouse.SelectedValue),
                             Subdivisioncode = Convert.ToInt32(comboBoxSubdivision.SelectedValue),
                             Responsiblesendercode = null,
-                            Responsiblereceivercode = null,
+                            Responsiblereceivercode = Convert.ToInt32(comboBoxMOLReceiver.SelectedValue),
                             Price = Convert.ToDecimal(textBoxPrice.Text),
                             TablePart = tablePart
                         });
+
+                        OperationViewModel viewOperation = logic.Read(new OperationBindingModel { Code = code })?[0];
+                        List<TablePartViewModel> viewTablePart = logicTablePart.Read(new TablePartBindingModel { Operationcode = Convert.ToInt32(code) });
+                        SubdivisionViewModel viewSubdivision = logicS.Read(new SubdivisionBindingModel { Code = viewOperation.Subdivisioncode })?[0];
+                        SubdivisionViewModel viewWarehouse = logicS.Read(new SubdivisionBindingModel { Code = viewOperation.Warehousesendercode })?[0];
+                        ResponsePersonViewModel viewMOL = logicR.Read(new ResponsePersonBindingModel { Code = viewOperation.Responsiblereceivercode })?[0];
+
+                        foreach (var item in viewTablePart)
+                        {
+                            viewModelMaterial = new MaterialViewModel();
+                            viewModelMaterial = logicMaterial.Read(new MaterialBindingModel { Code = item.Materialcode })?[0];
+
+                            logicJournal.CreateOrUpdate(new PostingJournalBindingModel
+                            {
+                                Debetcheck = Convert.ToInt32(viewDebet.Code),
+                                Date = viewOperation.Date,
+                                Numberdebetcheck = viewDebet.NumberOfCheck,
+                                Subcontodebet1 = viewSubdivision.Name,
+                                Subcontodebet2 = null,
+                                Subcontodebet3 = null,
+                                Creditcheck = Convert.ToInt32(viewCredit.Code),
+                                Numbercreditcheck = viewCredit.NumberOfCheck,
+                                Subcontocredit1 = viewModelMaterial.Name,
+                                Subcontocredit2 = viewWarehouse.Name,
+                                Subcontocredit3 = viewMOL.Name,
+                                Nameofmaterial = viewModelMaterial.Name,
+                                Count = item.Count,
+                                Sum = Convert.ToDecimal(item.Count * item.Price),
+                                Tablepartcode = item.Code,
+                                Operationcode = item.Operationcode,
+                                Comment = "Операция реализации материалов",
+                                Warehousereceivercode = null,
+                                Warehousesendercode = Convert.ToInt32(comboBoxWarehouse.SelectedValue),
+                            });
+                        }
                     }
                     else if (view != null)
                     {
+                        ChartOfAccountViewModel viewDebet = logicChart.Read(new ChartOfAccountsBindingModel { NumberOfCheck = comboBoxChecks.Text })?[0];
+                        ChartOfAccountViewModel viewCredit = logicChart.Read(new ChartOfAccountsBindingModel { NumberOfCheck = comboBoxCheckMaterial.Text })?[0];
+
                         logic.CreateOrUpdate(new OperationBindingModel
                         {
                             Code = view.Code,
                             Typeofoperation = comboBox.Text,
                             Date = dateTimePicker.Value,
                             Providercode = null,
-                            Warehousereceivercode = Convert.ToInt32(comboBoxWarehouse.SelectedValue),
-                            Warehousesendercode = null,
+                            Warehousereceivercode = null,
+                            Warehousesendercode = Convert.ToInt32(comboBoxWarehouse.SelectedValue),
                             Subdivisioncode = Convert.ToInt32(comboBoxSubdivision.SelectedValue),
                             Responsiblesendercode = null,
-                            Responsiblereceivercode = null,
+                            Responsiblereceivercode = Convert.ToInt32(comboBoxMOLReceiver.SelectedValue),
                             Price = Convert.ToDecimal(textBoxPrice.Text),
                             TablePart = tablePart
                         });
+
+                        OperationViewModel viewOperation = logic.Read(new OperationBindingModel { Code = code })?[0];
+                        List<TablePartViewModel> viewTablePart = logicTablePart.Read(new TablePartBindingModel { Operationcode = Convert.ToInt32(code) });
+                        SubdivisionViewModel viewSubdivision = logicS.Read(new SubdivisionBindingModel { Code = viewOperation.Subdivisioncode })?[0];
+                        SubdivisionViewModel viewWarehouse = logicS.Read(new SubdivisionBindingModel { Code = viewOperation.Warehousesendercode })?[0];
+                        ResponsePersonViewModel viewMOL = logicR.Read(new ResponsePersonBindingModel { Code = viewOperation.Responsiblereceivercode })?[0];
+
+                        foreach (var item in viewTablePart)
+                        {
+                            viewModelMaterial = new MaterialViewModel();
+                            viewModelMaterial = logicMaterial.Read(new MaterialBindingModel { Code = item.Materialcode })?[0];
+
+                            PostingJournalViewModel viewJournal = logicJournal.Read(new PostingJournalBindingModel { Tablepartcode = item.Code })?[0];
+
+                            if (viewJournal != null)
+                            {
+                                logicJournal.CreateOrUpdate(new PostingJournalBindingModel
+                                {
+                                    Code = viewJournal.Code,
+                                    Debetcheck = Convert.ToInt32(viewDebet.Code),
+                                    Date = viewOperation.Date,
+                                    Numberdebetcheck = viewDebet.NumberOfCheck,
+                                    Subcontodebet1 = viewSubdivision.Name,
+                                    Subcontodebet2 = null,
+                                    Subcontodebet3 = null,
+                                    Creditcheck = Convert.ToInt32(viewCredit.Code),
+                                    Numbercreditcheck = viewCredit.NumberOfCheck,
+                                    Subcontocredit1 = viewModelMaterial.Name,
+                                    Subcontocredit2 = viewWarehouse.Name,
+                                    Subcontocredit3 = viewMOL.Name,
+                                    Nameofmaterial = viewModelMaterial.Name,
+                                    Count = item.Count,
+                                    Sum = Convert.ToDecimal(item.Count * item.Price),
+                                    Tablepartcode = item.Code,
+                                    Operationcode = item.Operationcode,
+                                    Comment = viewJournal.Comment,
+                                    Warehousereceivercode = null,
+                                    Warehousesendercode = Convert.ToInt32(comboBoxWarehouse.SelectedValue),
+                                });
+                            }
+                            else if (viewJournal == null)
+                            {
+                                logicJournal.CreateOrUpdate(new PostingJournalBindingModel
+                                {
+                                    Debetcheck = Convert.ToInt32(viewDebet.Code),
+                                    Date = viewOperation.Date,
+                                    Numberdebetcheck = viewDebet.NumberOfCheck,
+                                    Subcontodebet1 = viewSubdivision.Name,
+                                    Subcontodebet2 = null,
+                                    Subcontodebet3 = null,
+                                    Creditcheck = Convert.ToInt32(viewCredit.Code),
+                                    Numbercreditcheck = viewCredit.NumberOfCheck,
+                                    Subcontocredit1 = viewModelMaterial.Name,
+                                    Subcontocredit2 = viewWarehouse.Name,
+                                    Subcontocredit3 = viewMOL.Name,
+                                    Nameofmaterial = viewModelMaterial.Name,
+                                    Count = item.Count,
+                                    Sum = Convert.ToDecimal(item.Count * item.Price),
+                                    Tablepartcode = item.Code,
+                                    Operationcode = item.Operationcode,
+                                    Comment = "Операция реализации материалов",
+                                    Warehousereceivercode = null,
+                                    Warehousesendercode = Convert.ToInt32(comboBoxWarehouse.SelectedValue),
+                                });
+                            }
+                        }
                     }
                 }
 
@@ -676,8 +946,14 @@ MessageBoxIcon.Error);
                 comboBoxWarehouseReceiver.Visible = false;
                 comboBoxMOLSender.Visible = false;
                 comboBoxMOLReceiver.Visible = false;
-                label10.Visible = false;
+                label10.Visible = false;               
                 comboBoxSubdivision.Visible = false;
+                label11.Visible = false;
+                comboBoxChecks.Visible = false;
+                label12.Visible = true;
+                comboBoxCheckMaterial.Visible = true;
+                label13.Visible = true;
+                comboBoxProvider.Visible = true;
             }
 
             else if (comboBox.Text == "Перемещение материалов с одного склада на другой")
@@ -698,6 +974,12 @@ MessageBoxIcon.Error);
                 comboBoxMOLReceiver.Visible = true;
                 label10.Visible = false;
                 comboBoxSubdivision.Visible = false;
+                label11.Visible = false;
+                comboBoxChecks.Visible = false;
+                label12.Visible = true;
+                comboBoxCheckMaterial.Visible = true;
+                label13.Visible = false;
+                comboBoxProvider.Visible = false;
             }
 
             else if (comboBox.Text == "Отпуск материала со склада в производство")
@@ -711,13 +993,19 @@ MessageBoxIcon.Error);
                 label6.Visible = false;
                 label7.Visible = false;
                 label8.Visible = false;
-                label9.Visible = false;
+                label9.Visible = true;
                 comboBoxWarehouseSender.Visible = false;
                 comboBoxWarehouseReceiver.Visible = false;
                 comboBoxMOLSender.Visible = false;
-                comboBoxMOLReceiver.Visible = false;
+                comboBoxMOLReceiver.Visible = true;
                 label10.Visible = true;
                 comboBoxSubdivision.Visible = true;
+                label11.Visible = true;
+                comboBoxChecks.Visible = true;
+                label12.Visible = true;
+                comboBoxCheckMaterial.Visible = true;
+                label13.Visible = false;
+                comboBoxProvider.Visible = false;
             }
         }
     }
