@@ -44,6 +44,8 @@ namespace LoanAgreement
             currentContainer.RegisterType<PostingJournalLogic>(new HierarchicalLifetimeManager());
             currentContainer.RegisterType<ITablePartStorage, TablePartStorage>(new HierarchicalLifetimeManager());
             currentContainer.RegisterType<TablePartLogic>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<ReportLogic>(new HierarchicalLifetimeManager());
+
             return currentContainer;
         }
     }

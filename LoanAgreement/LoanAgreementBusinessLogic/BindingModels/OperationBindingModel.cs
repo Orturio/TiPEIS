@@ -27,5 +27,9 @@ namespace MaterialAccountingBusinessLogic.BindingModels
         public decimal? Price { get; set; }
 
         public Dictionary<int, (string, int, decimal)> TablePart { get; set; }
+
+        public DateTime? DateFrom { get; set; }
+
+        public DateTime? DateTo { get; set; }
     }
 }

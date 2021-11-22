@@ -45,5 +45,7 @@ namespace MaterialAccountingBusinessLogic.BindingModels
         public int? Warehousereceivercode { get; set; }
 
         public int? Warehousesendercode { get; set; }
+
+        public DateTime? DateTo { get; set; }
     }
 }

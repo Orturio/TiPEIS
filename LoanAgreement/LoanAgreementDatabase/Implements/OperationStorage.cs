@@ -58,6 +58,34 @@ namespace MaterialAccountingDatabase.Implements
             }
         }
 
+        public List<OperationViewModel> GetFilteredListByData(OperationBindingModel model)
+        {
+            if (model == null)
+            {
+                return null;
+            }
+            using (var context = new postgresContext())
+            {
+                return context.Operation.Include(rec => rec.TablePart).ThenInclude(rec => rec.MaterialcodeNavigation)
+                    .Where(rec => (model.DateFrom.HasValue && model.DateTo.HasValue && rec.Date
+                    >= model.DateFrom.Value.Date && rec.Date <= model.DateTo.Value.Date && rec.Warehousereceivercode == model.Warehousereceivercode
+                    && rec.Typeofoperation == "Поступление материала на склад")).ToList().Select(rec => new OperationViewModel
+                {
+                    Code = rec.Code,
+                    Typeofoperation = rec.Typeofoperation,
+                    Date = rec.Date,
+                    Providercode = rec.Providercode,
+                    Warehousesendercode = rec.Warehousesendercode,
+                    Warehousereceivercode = rec.Warehousereceivercode,
+                    Subdivisioncode = rec.Subdivisioncode,
+                    Responsiblesendercode = rec.Responsiblesendercode,
+                    Responsiblereceivercode = rec.Responsiblereceivercode,
+                    Price = rec.Price,
+                    TablePart = rec.TablePart.ToDictionary(recPC => recPC.Materialcode, recPC => (recPC.MaterialcodeNavigation.Name, recPC.Count, recPC.MaterialcodeNavigation.Price))
+                }).ToList();
+            }
+        }
+
         public List<OperationViewModel> GetFilteredListByTypeOfOperation(OperationBindingModel model)
         {
             if (model == null)
@@ -67,6 +95,81 @@ namespace MaterialAccountingDatabase.Implements
             using (var context = new postgresContext())
             {
                 return context.Operation.Include(rec => rec.TablePart).ThenInclude(rec => rec.MaterialcodeNavigation).Where(rec => (rec.Typeofoperation == model.Typeofoperation && rec.Warehousereceivercode == model.Warehousereceivercode) || (rec.Typeofoperation == model.Typeofoperation && rec.Warehousesendercode == model.Warehousesendercode && rec.Date <= model.Date)).ToList().Select(rec => new OperationViewModel
+                {
+                    Code = rec.Code,
+                    Typeofoperation = rec.Typeofoperation,
+                    Date = rec.Date,
+                    Providercode = rec.Providercode,
+                    Warehousesendercode = rec.Warehousesendercode,
+                    Warehousereceivercode = rec.Warehousereceivercode,
+                    Subdivisioncode = rec.Subdivisioncode,
+                    Responsiblesendercode = rec.Responsiblesendercode,
+                    Responsiblereceivercode = rec.Responsiblereceivercode,
+                    Price = rec.Price,
+                    TablePart = rec.TablePart.ToDictionary(recPC => recPC.Materialcode, recPC => (recPC.MaterialcodeNavigation.Name, recPC.Count, recPC.MaterialcodeNavigation.Price))
+                }).ToList();
+            }
+        }
+
+        public List<OperationViewModel> GetFilteredListWarehouseReceive(OperationBindingModel model)
+        {
+            if (model == null)
+            {
+                return null;
+            }
+            using (var context = new postgresContext())
+            {
+                return context.Operation.Include(rec => rec.TablePart).ThenInclude(rec => rec.MaterialcodeNavigation).Where(rec => (rec.Date <= model.DateTo && rec.Warehousereceivercode == model.Warehousereceivercode)).ToList().Select(rec => new OperationViewModel
+                {
+                    Code = rec.Code,
+                    Typeofoperation = rec.Typeofoperation,
+                    Date = rec.Date,
+                    Providercode = rec.Providercode,
+                    Warehousesendercode = rec.Warehousesendercode,
+                    Warehousereceivercode = rec.Warehousereceivercode,
+                    Subdivisioncode = rec.Subdivisioncode,
+                    Responsiblesendercode = rec.Responsiblesendercode,
+                    Responsiblereceivercode = rec.Responsiblereceivercode,
+                    Price = rec.Price,
+                    TablePart = rec.TablePart.ToDictionary(recPC => recPC.Materialcode, recPC => (recPC.MaterialcodeNavigation.Name, recPC.Count, recPC.MaterialcodeNavigation.Price))
+                }).ToList();
+            }
+        }
+
+        public List<OperationViewModel> GetFilteredListWarehouseSender(OperationBindingModel model)
+        {
+            if (model == null)
+            {
+                return null;
+            }
+            using (var context = new postgresContext())
+            {
+                return context.Operation.Include(rec => rec.TablePart).ThenInclude(rec => rec.MaterialcodeNavigation).Where(rec => (model.DateFrom.HasValue && model.DateTo.HasValue && rec.Date <= model.DateTo && rec.Warehousesendercode == model.Warehousesendercode)).ToList().Select(rec => new OperationViewModel
+                {
+                    Code = rec.Code,
+                    Typeofoperation = rec.Typeofoperation,
+                    Date = rec.Date,
+                    Providercode = rec.Providercode,
+                    Warehousesendercode = rec.Warehousesendercode,
+                    Warehousereceivercode = rec.Warehousereceivercode,
+                    Subdivisioncode = rec.Subdivisioncode,
+                    Responsiblesendercode = rec.Responsiblesendercode,
+                    Responsiblereceivercode = rec.Responsiblereceivercode,
+                    Price = rec.Price,
+                    TablePart = rec.TablePart.ToDictionary(recPC => recPC.Materialcode, recPC => (recPC.MaterialcodeNavigation.Name, recPC.Count, recPC.MaterialcodeNavigation.Price))
+                }).ToList();
+            }
+        }
+
+        public List<OperationViewModel> GetFilteredListSubdivision(OperationBindingModel model)
+        {
+            if (model == null)
+            {
+                return null;
+            }
+            using (var context = new postgresContext())
+            {
+                return context.Operation.Include(rec => rec.TablePart).ThenInclude(rec => rec.MaterialcodeNavigation).Where(rec => (rec.Date <= model.DateTo && rec.Date >= model.DateFrom && rec.Subdivisioncode == model.Subdivisioncode)).ToList().Select(rec => new OperationViewModel
                 {
                     Code = rec.Code,
                     Typeofoperation = rec.Typeofoperation,

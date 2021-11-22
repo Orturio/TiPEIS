@@ -127,18 +127,21 @@ namespace LoanAgreement
             this.ведомостьРасходовToolStripMenuItem.Name = "ведомостьРасходовToolStripMenuItem";
             this.ведомостьРасходовToolStripMenuItem.Size = new System.Drawing.Size(336, 22);
             this.ведомостьРасходовToolStripMenuItem.Text = "Ведомость поступления материалов на склад";
+            this.ведомостьРасходовToolStripMenuItem.Click += new System.EventHandler(this.ведомостьРасходовToolStripMenuItem_Click);
             // 
             // ведомостьСуммПолученныхЗаймовЗаПериодToolStripMenuItem
             // 
             this.ведомостьСуммПолученныхЗаймовЗаПериодToolStripMenuItem.Name = "ведомостьСуммПолученныхЗаймовЗаПериодToolStripMenuItem";
             this.ведомостьСуммПолученныхЗаймовЗаПериодToolStripMenuItem.Size = new System.Drawing.Size(336, 22);
             this.ведомостьСуммПолученныхЗаймовЗаПериодToolStripMenuItem.Text = "Ведомость остатков на складе";
+            this.ведомостьСуммПолученныхЗаймовЗаПериодToolStripMenuItem.Click += new System.EventHandler(this.ведомостьСуммПолученныхЗаймовЗаПериодToolStripMenuItem_Click);
             // 
             // ведомостьОтпускаМатериаловВПроизводствоToolStripMenuItem
             // 
             this.ведомостьОтпускаМатериаловВПроизводствоToolStripMenuItem.Name = "ведомостьОтпускаМатериаловВПроизводствоToolStripMenuItem";
             this.ведомостьОтпускаМатериаловВПроизводствоToolStripMenuItem.Size = new System.Drawing.Size(336, 22);
             this.ведомостьОтпускаМатериаловВПроизводствоToolStripMenuItem.Text = "Ведомость отпуска материалов в производство";
+            this.ведомостьОтпускаМатериаловВПроизводствоToolStripMenuItem.Click += new System.EventHandler(this.ведомостьОтпускаМатериаловВПроизводствоToolStripMenuItem_Click);
             // 
             // dataGridView
             // 
