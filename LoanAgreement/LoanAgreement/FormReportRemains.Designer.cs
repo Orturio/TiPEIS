@@ -35,11 +35,13 @@
             this.label1 = new System.Windows.Forms.Label();
             this.dateTimePickerTo = new System.Windows.Forms.DateTimePicker();
             this.reportViewer = new Microsoft.Reporting.WinForms.ReportViewer();
+            this.buttonSaveToPdf = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.buttonSaveToPdf);
             this.panel1.Controls.Add(this.label2);
             this.panel1.Controls.Add(this.buttonMake);
             this.panel1.Controls.Add(this.comboBoxWarehouse);
@@ -61,7 +63,7 @@
             // 
             // buttonMake
             // 
-            this.buttonMake.Location = new System.Drawing.Point(755, 11);
+            this.buttonMake.Location = new System.Drawing.Point(623, 12);
             this.buttonMake.Name = "buttonMake";
             this.buttonMake.Size = new System.Drawing.Size(127, 23);
             this.buttonMake.TabIndex = 6;
@@ -103,6 +105,16 @@
             this.reportViewer.Size = new System.Drawing.Size(902, 436);
             this.reportViewer.TabIndex = 4;
             // 
+            // buttonSaveToPdf
+            // 
+            this.buttonSaveToPdf.Location = new System.Drawing.Point(771, 12);
+            this.buttonSaveToPdf.Name = "buttonSaveToPdf";
+            this.buttonSaveToPdf.Size = new System.Drawing.Size(121, 23);
+            this.buttonSaveToPdf.TabIndex = 8;
+            this.buttonSaveToPdf.Text = "Сохранить в Pdf";
+            this.buttonSaveToPdf.UseVisualStyleBackColor = true;
+            this.buttonSaveToPdf.Click += new System.EventHandler(this.buttonSaveToPdf_Click);
+            // 
             // FormReportRemains
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -127,5 +139,6 @@
         private System.Windows.Forms.DateTimePicker dateTimePickerTo;
         private Microsoft.Reporting.WinForms.ReportViewer reportViewer;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button buttonSaveToPdf;
     }
 }

@@ -16,6 +16,10 @@ namespace MaterialAccountingBusinessLogic.Interfaces
 
         List<PostingJournalViewModel> GetFilteredListByOperationCode(PostingJournalBindingModel model);
 
+        List<PostingJournalViewModel> GetFilteredListByNumberOfCheck(PostingJournalBindingModel model);
+
+        List<PostingJournalViewModel> GetFilteredListByDate(PostingJournalBindingModel model);       
+
         PostingJournalViewModel GetElement(PostingJournalBindingModel model);
 
         void Insert(PostingJournalBindingModel model);

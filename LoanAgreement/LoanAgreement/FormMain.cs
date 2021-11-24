@@ -100,5 +100,11 @@ namespace LoanAgreement
             var form = Container.Resolve<FormReportRelease>();
             form.ShowDialog();
         }
+
+        private void оборотносальдоваяВедомостьToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var form = Container.Resolve<FormReportTurnoverBalance>();
+            form.ShowDialog();
+        }
     }
 }

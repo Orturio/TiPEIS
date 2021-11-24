@@ -64,5 +64,42 @@ namespace LoanAgreement
                 MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        private void buttonSaveToPdf_Click(object sender, EventArgs e)
+        {
+            if (dateTimePickerTo.Value.Date == null)
+            {
+                MessageBox.Show("Дата была не выбрана", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (string.IsNullOrEmpty(comboBoxWarehouse.Text))
+            {
+                MessageBox.Show("Не выбрали склад", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            using (var dialog = new SaveFileDialog { Filter = "pdf|*.pdf" })
+            {
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        logic.SaveOperationsToPdfFileRemains(new ReportBindingModel
+                        {
+                            FileName = dialog.FileName,
+                            DateTo = dateTimePickerTo.Value,
+                            WarehouseCode = Convert.ToInt32(comboBoxWarehouse.SelectedValue)
+                        });
+
+                        MessageBox.Show("Выполнено", "Успех", MessageBoxButtons.OK,
+MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+        }
     }
 }

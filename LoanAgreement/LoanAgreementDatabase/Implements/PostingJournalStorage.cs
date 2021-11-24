@@ -63,6 +63,36 @@ namespace MaterialAccountingDatabase.Implements
             }
         }
 
+        public List<PostingJournalViewModel> GetFilteredListByNumberOfCheck(PostingJournalBindingModel model)
+        {
+            if (model == null)
+            {
+                return null;
+            }
+            using (var context = new postgresContext())
+            {
+                return context.PostingJournal.Include(rec => rec.TablepartcodeNavigation).ThenInclude(rec => rec.OperationcodeNavigation)
+                .Where(rec => ((rec.Numbercreditcheck == model.Numbercreditcheck || rec.Numberdebetcheck == model.Numbercreditcheck) && 
+                (model.DateFrom.HasValue && model.DateTo.HasValue && model.DateTo >= rec.Date && model.DateFrom <= rec.Date)) || 
+                (rec.Date <= model.DateFrom && (rec.Numbercreditcheck == model.Numbercreditcheck || rec.Numberdebetcheck == model.Numbercreditcheck)))
+                .Select(CreateModel).ToList();
+            }
+        }
+
+        public List<PostingJournalViewModel> GetFilteredListByDate(PostingJournalBindingModel model)
+        {
+            if (model == null)
+            {
+                return null;
+            }
+            using (var context = new postgresContext())
+            {
+                return context.PostingJournal.Include(rec => rec.TablepartcodeNavigation).ThenInclude(rec => rec.OperationcodeNavigation)
+                .Where(rec => model.DateFrom.HasValue && model.DateTo.HasValue && rec.Date <= model.DateTo)
+                .Select(CreateModel).ToList();
+            }
+        }
+
         public PostingJournalViewModel GetElement(PostingJournalBindingModel model)
         {
             if (model == null)

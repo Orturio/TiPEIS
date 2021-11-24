@@ -15,5 +15,7 @@ namespace MaterialAccountingBusinessLogic.BindingModels
         public int? WarehouseCode { get; set; }
 
         public int? SubdivisionCode { get; set; }
+
+        public string NumberOfCheck { get; set; }
     }
 }

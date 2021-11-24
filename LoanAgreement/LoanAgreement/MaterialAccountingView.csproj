@@ -108,11 +108,26 @@
     <Reference Include="Microsoft.SqlServer.Types, Version=14.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.SqlServer.Types.14.0.314.76\lib\net40\Microsoft.SqlServer.Types.dll</HintPath>
     </Reference>
+    <Reference Include="MigraDoc.DocumentObjectModel, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\PDFsharp-MigraDoc.1.50.5147\lib\net20\MigraDoc.DocumentObjectModel.dll</HintPath>
+    </Reference>
+    <Reference Include="MigraDoc.Rendering, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\PDFsharp-MigraDoc.1.50.5147\lib\net20\MigraDoc.Rendering.dll</HintPath>
+    </Reference>
+    <Reference Include="MigraDoc.RtfRendering, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\PDFsharp-MigraDoc.1.50.5147\lib\net20\MigraDoc.RtfRendering.dll</HintPath>
+    </Reference>
     <Reference Include="Npgsql, Version=4.1.9.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
       <HintPath>..\packages\Npgsql.4.1.9\lib\net461\Npgsql.dll</HintPath>
     </Reference>
     <Reference Include="Npgsql.EntityFrameworkCore.PostgreSQL, Version=3.1.18.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
       <HintPath>..\packages\Npgsql.EntityFrameworkCore.PostgreSQL.3.1.18\lib\netstandard2.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll</HintPath>
+    </Reference>
+    <Reference Include="PdfSharp, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\PDFsharp-MigraDoc.1.50.5147\lib\net20\PdfSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="PdfSharp.Charting, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\PDFsharp-MigraDoc.1.50.5147\lib\net20\PdfSharp.Charting.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
@@ -234,6 +249,12 @@
     <Compile Include="FormReportRemains.Designer.cs">
       <DependentUpon>FormReportRemains.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormReportTurnoverBalance.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormReportTurnoverBalance.Designer.cs">
+      <DependentUpon>FormReportTurnoverBalance.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormResponsePerson.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -300,6 +321,9 @@
     <EmbeddedResource Include="FormReportRemains.resx">
       <DependentUpon>FormReportRemains.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FormReportTurnoverBalance.resx">
+      <DependentUpon>FormReportTurnoverBalance.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormResponsePerson.resx">
       <DependentUpon>FormResponsePerson.cs</DependentUpon>
     </EmbeddedResource>
@@ -327,8 +351,11 @@
     <EmbeddedResource Include="ReportReceive.rdlc" />
     <EmbeddedResource Include="ReportRelease.rdlc" />
     <EmbeddedResource Include="ReportRemains.rdlc" />
+    <EmbeddedResource Include="ReportTurnoverBalance.rdlc" />
     <None Include="packages.config" />
+    <None Include="Properties\DataSources\MaterialAccountingBusinessLogic.ViewModels.ReportPostsViewModel.datasource" />
     <None Include="Properties\DataSources\MaterialAccountingBusinessLogic.ViewModels.ReportReceiveViewModel.datasource" />
+    <None Include="Properties\DataSources\MaterialAccountingBusinessLogic.ViewModels.ReportTurnoverBalanceViewModel.datasource" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

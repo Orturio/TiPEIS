@@ -144,7 +144,7 @@ namespace MaterialAccountingDatabase.Implements
             }
             using (var context = new postgresContext())
             {
-                return context.Operation.Include(rec => rec.TablePart).ThenInclude(rec => rec.MaterialcodeNavigation).Where(rec => (model.DateFrom.HasValue && model.DateTo.HasValue && rec.Date <= model.DateTo && rec.Warehousesendercode == model.Warehousesendercode)).ToList().Select(rec => new OperationViewModel
+                return context.Operation.Include(rec => rec.TablePart).ThenInclude(rec => rec.MaterialcodeNavigation).Where(rec => (model.DateTo.HasValue && rec.Date <= model.DateTo && rec.Warehousesendercode == model.Warehousesendercode)).ToList().Select(rec => new OperationViewModel
                 {
                     Code = rec.Code,
                     Typeofoperation = rec.Typeofoperation,

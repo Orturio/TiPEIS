@@ -43,6 +43,7 @@ namespace LoanAgreement
             this.ведомостьОтпускаМатериаловВПроизводствоToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dataGridView = new System.Windows.Forms.DataGridView();
             this.labelName = new System.Windows.Forms.Label();
+            this.оборотносальдоваяВедомостьToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.SuspendLayout();
@@ -53,7 +54,8 @@ namespace LoanAgreement
             this.справочникиToolStripMenuItem,
             this.журналОперацийToolStripMenuItem,
             this.журналПроводокToolStripMenuItem,
-            this.отчетыToolStripMenuItem});
+            this.отчетыToolStripMenuItem,
+            this.оборотносальдоваяВедомостьToolStripMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
             this.menuStrip.Size = new System.Drawing.Size(886, 24);
@@ -162,6 +164,13 @@ namespace LoanAgreement
             this.labelName.TabIndex = 2;
             this.labelName.Text = "План счетов";
             // 
+            // оборотносальдоваяВедомостьToolStripMenuItem
+            // 
+            this.оборотносальдоваяВедомостьToolStripMenuItem.Name = "оборотносальдоваяВедомостьToolStripMenuItem";
+            this.оборотносальдоваяВедомостьToolStripMenuItem.Size = new System.Drawing.Size(197, 20);
+            this.оборотносальдоваяВедомостьToolStripMenuItem.Text = "Оборотно-сальдовая ведомость";
+            this.оборотносальдоваяВедомостьToolStripMenuItem.Click += new System.EventHandler(this.оборотносальдоваяВедомостьToolStripMenuItem_Click);
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -198,6 +207,7 @@ namespace LoanAgreement
         private System.Windows.Forms.ToolStripMenuItem мОЛToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem поставщикиToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ведомостьОтпускаМатериаловВПроизводствоToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem оборотносальдоваяВедомостьToolStripMenuItem;
     }
 }
 
